@@ -1,0 +1,362 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Areas/Admin/Views/Shared/Flower_Layout.cshtml";
+
+}
+
+
+@section FLOWER{
+    <div id="featured-content">
+    </div>
+}
+@section BIRTHDAY{
+    <div id="featured-content">
+        <h2 class="text-warning">Bithday Flower</h2>
+        <div id="Birthday" style="margin-bottom:0px">
+        </div>
+
+    </div>
+}
+
+@section TULIP{
+    <div id="featured-content">
+        <h2 class="text-warning">Tulip Flower</h2>
+        <div id="Tulip" style="margin-bottom:0px">
+        </div>
+    </div>
+}
+
+@section ANOTHER{
+    <div id="featured-content">
+        <h2 class="text-warning">Another Flower</h2>
+        <div id="Another" style="margin-bottom: 0px">
+        </div>
+    </div>
+}
+
+@section MODEL_DIALOG {
+    <div class="modal fade" id="CreateEditModal" role="dialog">
+        <div class="modal-dialog btn-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title"><label id="title">No Title</label></h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <input type="hidden" class="form-control" id="Id" />
+                                <label>Flower Name</label>
+                                <input type="text" id="FlowerName" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                @using (Html.BeginForm("Index", "Flower", null, FormMethod.Post,
+                                                    new { enctype = "multipart/form-data", id = "UploadForm" }))
+                                {
+                                    <lable>ImagePath</lable>
+                                    <input type="file" name="file" class="form-control" id="ImagePath" />
+                                    <input type="submit" id="btnsubmit" class="hidden" />
+                                }
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <label>Description</label>
+                                <input type="text" id="Description" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <label>Price</label>
+                                <input type="text" id="Price" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <label>Type</label><br />
+                                <select name="type" id="Type" class="btn btn-default">
+                                    <option value="Birthday">Birthday Flower</option>
+                                    <option value="Tulip">Tulip Flower</option>
+                                    <option value="Another">Another</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="btnClose" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" id="btnSave" class="btn btn-primary" data-dismiss="modal">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Script {
+    <script type="text/javascript" src="~/Scripts/jquery-3.4.1.min.js"></script>
+    <script type="text/javascript">
+        var isUpdatable = false;
+        var currentUpdatePath = "";
+        var currentId = 0;
+
+        $(document).ready(function () {
+            showFlowers();
+
+            $("#btnCreateNew").click(function (e) {
+                isUpdatable = false;
+                $("#title").text("Create New");
+            });
+
+            $("#btnClose").click(function (e) {
+                clearModalContent();
+            });
+
+            $("#btnSave").click(function (e) {
+                var data = {
+                    //Id: $("#Id").val(),
+                    FlowerName: $("#FlowerName").val(),
+                    ImagePath: $("#ImagePath").val(),
+                    Description: $("#Description").val(),
+                    Price: $("#Price").val(),
+                    Type: $("#Type").val()
+                }
+                if (!isUpdatable) {
+                    if (!data.ImagePath || !data.FlowerName || !data.Price) {
+                        alert("You should input FlowerName, choose flower image and input flower price");
+                        return;
+                    }
+                }
+                else {
+                    if (!data.ImagePath)
+                        data.ImagePath = currentUpdatePath;
+                    data.Id = currentId;
+                }
+
+                alert("success");
+                $("#UploadForm").submit();
+
+                if (!isUpdatable) {
+                    $.ajax({
+                        url: '/Admin/Flower/Create/',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: data,
+                        success: function (data) {
+                            showFlowers();
+                            clearModalContent();
+                        },
+                        error: function (err) {
+                            alert("Error: " + err.responseText);
+                        }
+                    });
+                }
+                else {
+                    $.ajax({
+                        url: '/Admin/Flower/Update/',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: data,
+                        success: function (data) {
+                            showFlowers();
+                            clearModalContent();
+                        },
+                        error: function (err) {
+                            alert("Error: " + err.responseText);
+                        }
+                    });
+                }
+            });
+
+            $("#btnSearch").click(function (e) {
+                showSearchFlowers();
+            });
+
+            function clearModalContent() {
+                $("#FlowerName").val("");
+                $("#ImagePath").val("");
+                $("#Description").val("");
+                $("#Price").val("");
+                isUpdatable = false;
+            }
+        });
+
+        function showFlowers() {
+            $("#featured-content").empty();
+
+
+            $.ajax({
+                url: '/Admin/Flower/ListFlowers',
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    var countb = 0;
+                    var countt = 0;
+                    var counta = 0;
+                    $.each(data, function (i, item) {
+                        var id = item.Id;
+                        var flowername = item.FlowerName;
+                        var tagimage = item.ImagePath;
+                        var tagdescription = item.Description;
+                        var tagprice = item.Price;
+                        var classname = "#" + item.Type;
+                        if (item.Type == "Birthday") {
+                            if (countb == 3) {
+                                countb = 1;
+                            }
+                            else {
+                                countb++;
+                            }
+                            AppendNewFlower(id, countb, flowername, tagimage, tagdescription, tagprice, classname);
+                        }
+                        if (item.Type == "Tulip") {
+                            if (countt == 3) {
+                                countt = 1;
+                            }
+                            else {
+                                countt++;
+                            }
+                            AppendNewFlower(id, countt, flowername, tagimage, tagdescription, tagprice, classname);
+                        }
+                        if (item.Type == "Another") {
+                            if (counta == 3) {
+                                counta = 1;
+                            }
+                            else {
+                                counta++;
+                            }
+                            AppendNewFlower(id, counta, flowername, tagimage, tagdescription, tagprice, classname);
+                        }
+                    });
+                },
+                error: function (err) {
+                    alert("Error: " + err.responseText);
+                }
+            });
+        };
+
+        function showSearchFlowers() {
+            var data = {
+                Id: "",
+                FlowerName: $("#SearchFlowerName").val(),
+                ImagePath: "",
+                Description: "",
+                Price: $("#SearchPrice").val()
+            }
+            $("#Birthday").empty();
+            $("#Tulip").empty();
+            $("#Another").empty();
+
+            $.ajax({
+                url: '/Admin/Flower/Search',
+                type: 'GET',
+                dataType: 'json',
+                data: data,
+                success: function (data) {
+                    var countb = 0;
+                    var countt = 0;
+                    var counta = 0;
+                    $.each(data, function (i, item) {
+                        var id = item.Id;
+                        var flowername = item.FlowerName;
+                        var tagimage = item.ImagePath;
+                        var tagdescription = item.Description;
+                        var tagprice = item.Price;
+                        var classname = "#" + item.Type;
+                        if (item.Type == "Birthday") {
+                            if (countb == 3) {
+                                countb = 1;
+                            }
+                            else {
+                                countb++;
+                            }
+                            AppendNewFlower(id, countb, flowername, tagimage, tagdescription, tagprice, classname);
+                        }
+                        if (item.Type == "Tulip") {
+                            if (countt == 3) {
+                                countt = 1;
+                            }
+                            else {
+                                countt++;
+                            }
+                            AppendNewFlower(id, countt, flowername, tagimage, tagdescription, tagprice, classname);
+                        }
+                        if (item.Type == "Another") {
+                            if (counta == 3) {
+                                counta = 1;
+                            }
+                            else {
+                                counta++;
+                            }
+                            AppendNewFlower(id, counta, flowername, tagimage, tagdescription, tagprice, classname);
+                        }
+                    });
+                },
+                error: function (err) {
+                    alert("Error: " + err.responseText);
+                }
+            });
+        };
+
+        function AppendNewFlower(id, count, flowername, tagimage, tagdescription, tagprice, classname) {
+            rows = ' ';
+            rows += '<div id="column' + count + '">';
+            rows += '<h2>' + flowername + '</h2>';
+            rows += '<div class="image"><img src="/Assets/Flower/' + tagimage + '" width="300" height="150" alt="" /></div>';
+            rows += '<div class="tagcontent">' + tagdescription + '</div>';
+            rows += '<div class="tagcost"><strong>Price: ' + tagprice + '$</strong></div>';
+            rows += '<div class="groupbutton">';
+            rows += '<p class="button"><a href="#">Read More</a></p>';
+            rows += "<button type='button' id='btnEdit' class='btn btn-primary' " +
+                "data-toggle='modal' data-target='#CreateEditModal' " +
+                "onclick='return getDetailFlower(" + id + ")'>Edit</button>&nbsp;";
+            rows += "<button type='button' id='btnDelete' class='btn btn-danger'" +
+                "onclick='return deleteFlower(" + id + ")'>Delete</button>";
+            rows += '</div>';
+            rows += '</div>';
+            $(classname).append(rows);
+        };
+
+        function deleteFlower(id) {
+            var confirmDetele = confirm("Do you want to delete flower?");
+            $.ajax({
+                url: '/Admin/Flower/Delete/' + id,
+                type: 'POST',
+                dataType: 'json',
+                success: function (data) {
+                    showFlowers();
+                },
+                error: function (err) {
+                    alert("Error: " + err.responseText);
+                }
+            });
+        };
+
+        function getDetailFlower(id) {
+            isUpdatable = true;
+            currentUpdatePath = "";
+            currentId = 0;
+            $("#title").text("Edit");
+
+            $.ajax({
+                url: '/Admin/Flower/Get/' + id,
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    $("#FlowerName").val(data.FlowerName);
+                    $("#Description").val(data.Description);
+                    $("#Price").val(data.Price);
+                    currentUpdatePath = data.ImagePath;
+                    currentId = data.Id;
+                },
+                error: function (err) {
+                    alert("Error: " + err.responseText);
+                }
+            });
+        };
+    </script>
+}
+

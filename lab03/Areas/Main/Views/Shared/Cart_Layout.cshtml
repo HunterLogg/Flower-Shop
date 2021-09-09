@@ -1,0 +1,41 @@
+﻿ <link rel="stylesheet" href="~/Assets/Table/css/style.css">
+@{
+    ViewBag.Title = "Cart_Layout";
+    Layout = "~/Areas/Main/Views/Shared/Flower_Layout.cshtml";
+}
+<h2>Print report for cart</h2>
+<div style="margin-left:280px">
+    @Html.ActionLink("Export to Excel", "Reports", new { ReportType = "Excel" }, new { @class = "btn btn-info" }) |
+    @Html.ActionLink("Export to PDF", "Reports", new { ReportType = "PDF" }, new { @class = "btn btn-info" }) |
+    @Html.ActionLink("Export to Word", "Reports", new { ReportType = "Word" }, new { @class = "btn btn-info" }) |
+    @Html.ActionLink("Export to Image", "Reports", new { ReportType = "Image" }, new { @class = "btn btn-info" })
+</div>
+<div id="wrapper" style="margin: 0 60px">
+
+    <h1><span class="blue">&lt;</span>Cart<span class="blue">&gt;</span> <span class="yellow">Infomation</span></h1>
+
+    <table class="container">
+        <thead>
+            <tr>
+                <th>CustomerName</th>
+                <th>CustomerEmail</th>
+                <th>Date</th>
+                <th>FlowerName</th>
+                <th>Quantity</th>
+                <th>Total</th>
+                <th>Manipulation</th>
+            </tr>
+        </thead>
+        <tbody>
+            @RenderSection("TABLE", required: false)
+        </tbody>
+    </table>
+
+
+</div>
+
+@RenderSection("MODEL_DIALOG", required: false)
+
+@RenderSection("Script", required: false)
+
+

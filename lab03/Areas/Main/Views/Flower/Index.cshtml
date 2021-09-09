@@ -1,0 +1,340 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Areas/Main/Views/Shared/Flower_Layout.cshtml";
+}
+
+@section MODEL_DIALOG {
+    <div class="modal fade" id="CreateEditModal" role="dialog">
+        <div class="modal-dialog btn-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title"><label id="title">No Title</label></h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <input type="hidden" class="form-control" id="Id" />
+                                <label>Customer Name</label>
+                                <input type="text" id="CustomerName" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <label>Customer Email</label>
+                                <input type="text" id="CustomerEmail" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <label>Date </label>
+                                <input type="text" id="DealDate" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <label>Flower Name</label>
+                                <input type="text" id="FlowerName" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <label>Quantity</label>
+                                <input type="text" id="Quantity" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <label>Price</label>
+                                <input type="text" id="Price" class="form-control" readonly />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="btnClose" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" id="btnSave" class="btn btn-primary" data-dismiss="modal">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@section FLOWER{
+    <div id="featured-content">
+    </div>
+}
+
+@section BIRTHDAY{
+    <div id="featured-content">
+        <div id="Birthday" style="margin-bottom:0px">
+            <h2 class="text-primary">Birthday Flower</h2>
+        </div>
+    </div>
+}
+
+@section TULIP{
+    <div id="featured-content">
+        <div id="Tulip" style="margin-bottom:0px">
+            <h2 style="color:#a000e5">Tulip Flower</h2>
+        </div>
+    </div>
+}
+
+@section ANOTHER{
+    <div id="featured-content">
+        <div id="Another" style="margin-bottom: 0px">
+            <h2 style="color:#0becec">Another Flower</h2>
+        </div>
+    </div>
+}
+
+@section Script {
+    <script type="text/javascript" src="~/Scripts/jquery-3.4.1.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            showFlowers();
+            $("#page").css("background-color", "#dddd");
+            $("#wrapper").css("background-color", "#ddd");
+
+            isUpdatable = false;
+            $("#btnClose").click(function (e) {
+                clearModalContent();
+            });
+
+            $("#btnSave").click(function (e) {
+                var data = {
+                    Id: $("#Id").val(),
+                    CustomerName: $("#CustomerName").val(),
+                    CustomerEmail: $("#CustomerEmail").val(),
+                    DealDate: $("#DealDate").val(),
+                    FlowerName: $("#FlowerName").val(),
+                    Quantity: $("#Quantity").val(),
+                    Price: $("#Price").val(),
+                    Total: $("#Price").val() * $("#Quantity").val(),
+                }
+
+                if (!isUpdatable) {
+                    if (!data.Quantity) {
+                        alert("You should input flower Quantity ");
+                        return;
+                    }
+                }
+                else {
+                    data.Id = currentId;
+                }
+
+                alert("Success");
+                $("#UploadForm").submit();
+
+                if (!isUpdatable) {
+                    $.ajax({
+                        url: '/Flower/Create/',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: data,
+                        success: function (data) {
+                            clearModalContent();
+                        },
+                        error: function (err) {
+                            alert("Error: " + err.responseText);
+                        }
+                    });
+                }
+                else {
+                    $.ajax({
+                        url: '/Flower/Update/',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: data,
+                        success: function (data) {
+                            clearModalContent();
+                        },
+                        error: function (err) {
+                            alert("Error: " + err.responseText);
+                        }
+                    });
+                }
+            });
+        });
+
+        function createnewcart() {
+            $.ajax({
+                url: '/Flower/SearchUser',
+                type: 'get',
+                dataType: 'json',
+                success: function (data) {
+                    $.each(data, function (i, item) {
+                        $("#CustomerName").val(item.UserName);
+                        $("#CustomerEmail").val(item.Email);
+                    })
+                }
+            });
+        }
+
+        function showFlowers() {
+            $("#featured-content").empty();
+
+            $.ajax({
+                url: '/Flower/ListFlowers',
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    var countb = 0;
+                    var countt = 0;
+                    var counta = 0;
+                    $.each(data, function (i, item) {
+                        var id = item.Id;
+                        var flowername = item.FlowerName;
+                        var tagimage = item.ImagePath;
+                        var tagdescription = item.Description;
+                        var tagprice = item.Price;
+                        var classname = "#" + item.Type;
+                        if (item.Type == "Birthday") {
+                            if (countb == 3) {
+                                countb = 1;
+                            }
+                            else {
+                                countb++;
+                            }
+                            AppendNewFlower(id, countb, flowername, tagimage, tagdescription, tagprice, classname);
+                        }
+                        if (item.Type == "Tulip") {
+                            if (countt == 3) {
+                                countt = 1;
+                            }
+                            else {
+                                countt++;
+                            }
+                            AppendNewFlower(id, countt, flowername, tagimage, tagdescription, tagprice, classname);
+                        }
+                        if (item.Type == "Another") {
+                            if (counta == 3) {
+                                counta = 1;
+                            }
+                            else {
+                                counta++;
+                            }
+                            AppendNewFlower(id, counta, flowername, tagimage, tagdescription, tagprice, classname);
+                        }
+                    });
+                },
+                error: function (err) {
+                    alert("Error: " + err.responseText);
+                }
+            });
+            $("#btnSearch").click(function (e) {
+                showSearchFlowers();
+            });
+        };
+
+        function showSearchFlowers() {
+            var data = {
+                Id: "",
+                FlowerName: $("#SearchFlowerName").val(),
+                ImagePath: "",
+                Description: "",
+                Price: $("#SearchPrice").val()
+            }
+            $("#Birthday").empty();
+            $("#Tulip").empty();
+            $("#Another").empty();
+
+            $.ajax({
+                url: '/Admin/Flower/Search',
+                type: 'GET',
+                dataType: 'json',
+                data: data,
+                success: function (data) {
+                    var countb = 0;
+                    var countt = 0;
+                    var counta = 0;
+                    $.each(data, function (i, item) {
+                        var id = item.Id;
+                        var flowername = item.FlowerName;
+                        var tagimage = item.ImagePath;
+                        var tagdescription = item.Description;
+                        var tagprice = item.Price;
+                        var classname = "#" + item.Type;
+                        if (item.Type == "Birthday") {
+                            if (countb == 3) {
+                                countb = 1;
+                            }
+                            else {
+                                countb++;
+                            }
+                            AppendNewFlower(id, countb, flowername, tagimage, tagdescription, tagprice, classname);
+                        }
+                        if (item.Type == "Tulip") {
+                            if (countt == 3) {
+                                countt = 1;
+                            }
+                            else {
+                                countt++;
+                            }
+                            AppendNewFlower(id, countt, flowername, tagimage, tagdescription, tagprice, classname);
+                        }
+                        if (item.Type == "Another") {
+                            if (counta == 3) {
+                                counta = 1;
+                            }
+                            else {
+                                counta++;
+                            }
+                            AppendNewFlower(id, counta, flowername, tagimage, tagdescription, tagprice, classname);
+                        }
+                    });
+                },
+                error: function (err) {
+                    alert("Error: " + err.responseText);
+                }
+            });
+        };
+
+        function AppendNewFlower(Id, count, flowername, tagimage, tagdescription, tagprice, classname) {
+            rows = ' ';
+            rows += '<div id="column' + count + '">';
+            rows += '<h2>' + flowername + '</h2>';
+            rows += '<div class="image"><img src="/Assets/Flower/' + tagimage + '" width="300" height="150" alt="" /></div>';
+            rows += '<div class="tagcontent">' + tagdescription + '</div>';
+            rows += '<div class="tagcost"><strong>Price: $' + tagprice + '</strong></div>';
+            rows += '<div class="groupbutton">';
+            rows += '<p class="button"><a href="#">Read More</a></p>';
+            rows += '<button type="button" id="btnCreateNew" data-toggle="modal" data-target="#CreateEditModal" class="btn btn-success"';
+            rows += 'onclick="return createNewCart(' + Id + ')" > Add to cart</button > ';
+            rows += '</div>';
+            rows += '</div>';
+            $(classname).append(rows);
+        };
+
+        function createNewCart(id) {
+            $.ajax({
+                url: '/Flower/Get/' + id,
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    $("#FlowerName").val(data.FlowerName);
+                    $("#Price").val(data.Price);
+                    $("#title").text("Create New");
+                    var now = new Date();
+                    var day = now.getDate().toString();
+                    var month = (now.getMonth() + 1).toString();
+                    var year = now.getFullYear().toString();
+                    if (day.length == 1)
+                        day = "0" + day;
+                    if (month.length == 1)
+                        month = "0" + month;
+                    $("#DealDate").val(year + "-" + month + "-" + day);
+                    createnewcart();
+                },
+                error: function (err) {
+                    alert("Error: " + err.responseText);
+                }
+            });
+        };
+    </script>
+}
+

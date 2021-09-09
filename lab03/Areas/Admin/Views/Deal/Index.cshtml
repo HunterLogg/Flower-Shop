@@ -1,0 +1,253 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Areas/Admin/Views/Shared/Deal_Layout.cshtml";
+
+}
+
+
+@section TABLE {
+    <tbody id="tbody">
+    </tbody>
+}
+
+@section MODEL_DIALOG {
+    <div class="modal fade" id="CreateEditModal" role="dialog">
+        <div class="modal-dialog btn-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title"><label id="title">No Title</label></h4>
+                </div>
+                <div class="modal-body">
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <input type="hidden" class="form-control" id="Id" />
+                                <label>Customer Name</label>
+                                <input type="text" id="CustomerName" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <label>Customer Email</label>
+                                <input type="text" id="CustomerEmail" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <label>Date </label>
+                                <input type="text" id="DealDate" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <label>Flower Name</label>
+                                <input type="text" id="FlowerName" class="form-control" readonly />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <label>Quantity</label>
+                                <input type="text" id="Quantity" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-10">
+                                <input type="hidden" class="form-control" id="Price" />
+                                <label>Total</label>
+                                <input type="text" id="Total" class="form-control" readonly />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="btnClose" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" id="btnSave" class="btn btn-primary" data-dismiss="modal">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Script {
+    <script type="text/javascript" src="~/Scripts/jquery-3.4.1.min.js"></script>
+    <script type="text/javascript">
+        var currentId = 0;
+
+        $(document).ready(function () {
+            showDeal();
+
+            $("#btnClose").click(function (e) {
+                clearModalContent();
+            });
+
+            $("#btnSave").click(function (e) {
+                var data = {
+                    Id: currentId,
+                    CustomerName: $("#CustomerName").val(),
+                    CustomerEmail: $("#CustomerEmail").val(),
+                    DealDate: $("#DealDate").val(),
+                    FlowerName: $("#FlowerName").val(),
+                    Quantity: $("#Quantity").val(),
+                    Total: $("#Price").val() * $("#Quantity").val(),
+                }
+
+                alert("Success");
+                $("#UploadForm").submit();
+
+
+                $.ajax({
+                    url: '/Admin/Deal/Update/',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: data,
+                    success: function (data) {
+                        showDeal();
+                        clearModalContent();
+                    },
+                    error: function (err) {
+                        alert("Error: " + err.responseText);
+                    }
+                });
+
+            });
+
+            $("#btnSearch").click(function (e) {
+                showSearchDeal();
+            });
+
+            function clearModalContent() {
+                $("#FlowerName").val("");
+                $("#Quantity").val("");
+                isUpdatable = false;
+            };
+        });
+
+        function showDeal() {
+            $("#tbody").empty();
+
+            $.ajax({
+                url: '/Admin/Deal/ListDeals/',
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    var totalamount = 0;
+                    $.each(data, function (i, item) {
+                        var id = item.Id;
+                        var customername = item.CustomerName;
+                        var customeremail = item.CustomerEmail;
+                        var date = item.DealDate;
+                        var flowername = item.FlowerName;
+                        var quantity = item.Quantity;
+                        var total = item.Total;
+                        totalamount += total;
+                        AppendNewDeal(id, customername, customeremail, date, flowername, quantity, total);
+                    });
+                    rows = ' ';
+                    rows += '<tr> <td></td> <td></td> <td></td><td></td><td>Total amount </td>'
+                    rows += ' <td> ' + totalamount + ' $</td> </tr>';
+                    $("#tbody").append(rows);
+                },
+                error: function (err) {
+                    alert("Error: " + err.responseText);
+                }
+            });
+        };
+
+        function showSearchDeal() {
+            var data = {
+                Id: "",
+                CustomerName: $("#SearchCustomerName").val(),
+                CustomerEmail: $("#SearchCustomerEmail").val(),
+                DealDate: $("#SearchDateTransaction").val(),
+                FlowerName: $("#SearchFlowerName").val(),
+            }
+            $("#tbody").empty();
+
+            $.ajax({
+                url: '/Admin/Deal/Search',
+                type: 'GET',
+                dataType: 'json',
+                data: data,
+                success: function (data) {
+                    $.each(data, function (i, item) {
+                        var id = item.Id;
+                        var customername = item.CustomerName;
+                        var customeremail = item.CustomerEmail;
+                        var date = item.DealDate;
+                        var flowername = item.FlowerName;
+                        var quantity = item.Quantity;
+                        var total = item.Total;
+                        AppendNewDeal(id, customername, customeremail, date, flowername, quantity, total);
+                    });
+                },
+                error: function (err) {
+                    alert("Error: " + err.responseText);
+                }
+            });
+        }
+
+        function AppendNewDeal(id, customername, customeremail, date, flowername, quantity, total) {
+            rows = ' ';
+            rows += '<tr>';
+            rows += '<td>' + customername + '</td>';
+            rows += '<td>' + customeremail + '</td>';
+            rows += '<td>' + date + '</td>';
+            rows += '<td>' + flowername + '</td>';
+            rows += '<td>' + quantity + '</td>';
+            rows += '<td>' + total + " $"+ '</td>';
+            rows += '<td>';
+            rows += "<button type='button' id='btnEdit' class='btn btn-primary' " +
+                "data-toggle='modal' data-target='#CreateEditModal' " +
+                "onclick='return getDetailDeal(" + id + ")'>Edit</button>&nbsp;";
+            rows += "<button type='button' id='btnDelete' class='btn btn-danger'" +
+                "onclick='return deleteDeal(" + id + ")'>Delete</button>";
+            rows += '</td>';
+            rows += '</tr>';
+            rows += '</tr>';
+            $("#tbody").append(rows);
+        };
+
+        function deleteDeal(id) {
+            var confirmDelete = confirm("Do you want to delete deal?");
+            $.ajax({
+                url: '/Admin/Deal/Delete/' + id,
+                type: 'POST',
+                dataType: 'json',
+                success: function (data) {
+                    showDeal();
+                },
+                error: function (err) {
+                    alert("Error: " + err.responseText);
+                }
+            });
+        };
+
+        function getDetailDeal(id) {
+            currentId = 0;
+
+            $("#title").text("Edit");
+
+            $.ajax({
+                url: '/Admin/Deal/Get/' + id,
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    $("#CustomerName").val(data.CustomerName);
+                    $("#CustomerEmail").val(data.CustomerEmail);
+                    $("#DealDate").val(data.DealDate);
+                    $("#FlowerName").val(data.FlowerName);
+                    $("#Quantity").val(data.Quantity);
+                    $("#Price").val(data.Price);
+                    $("#Total").val(data.Total + " $");
+                    currentId = data.Id;
+                },
+                error: function (err) {
+                    alert("Error: " + err.responseText);
+                }
+            });
+        };
+    </script>
+}
+

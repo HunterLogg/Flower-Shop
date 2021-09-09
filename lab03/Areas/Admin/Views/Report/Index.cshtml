@@ -1,0 +1,69 @@
+﻿@model IEnumerable<lab03.Deal>
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Areas/Admin/Views/Shared/Menu_Layout.cshtml";
+}
+<br />
+<h2 class="text-success">All deals</h2>
+
+@Html.ActionLink("Export to Excel", "Reports", new { ReportType = "Excel" }, new { @class = "btn btn-info" }) |
+@Html.ActionLink("Export to PDF", "Reports", new { ReportType = "PDF" }, new { @class = "btn btn-info" }) |
+@Html.ActionLink("Export to Word", "Reports", new { ReportType = "Word" }, new { @class = "btn btn-info" }) |
+@Html.ActionLink("Export to Image", "Reports", new { ReportType = "Image" }, new { @class = "btn btn-info" })
+
+<br />
+<table class="table">
+    <tr style="background-color: #0094ff">
+        <th>
+            @Html.DisplayNameFor(model => model.CustomerName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.CustomerEmail)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.DealDate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.FlowerName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Quantity)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Total)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Price)
+        </th>
+        <th></th>
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.CustomerName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CustomerEmail)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.DealDate)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.FlowerName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Quantity)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Total)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Price)
+            </td>
+        </tr>
+    }
+
+</table>
